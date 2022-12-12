@@ -1,8 +1,9 @@
 package main
 
 import (
-	queue "github.com/iddqdeika/kafka-adapter"
 	"log"
+
+	queue "gitlab.goodsteam.tech/moklyakov/kafka-adapter"
 )
 
 func main() {
