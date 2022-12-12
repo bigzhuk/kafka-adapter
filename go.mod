@@ -1,4 +1,4 @@
-module github.com/iddqdeika/kafka-adapter
+module gitlab.goodsteam.tech/grigorevsky/kafka-adapter
 
 go 1.13
 
@@ -7,4 +7,4 @@ require (
 	github.com/segmentio/kafka-go v0.4.28
 )
 
-replace github.com/segmentio/kafka-go v0.4.28 => github.com/iddqdeika/kafka-go v0.4.28-fix
+replace github.com/segmentio/kafka-go v0.4.28 => gitlab.goodsteam.tech/grigorevsky/kafka-adapter v0.4.28-fix
