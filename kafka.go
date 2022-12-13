@@ -620,6 +620,10 @@ func (q *Queue) GetConsumerLagForSinglePartition(ctx context.Context, topicName 
 	return newest - lag - 1, nil
 }
 
+func (q *Queue) Hello() {
+	fmt.Println("hi")
+}
+
 type Message struct {
 	msg             *kafka.Message
 	reader          *kafka.Reader
