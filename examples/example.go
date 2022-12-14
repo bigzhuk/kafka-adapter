@@ -1,9 +1,8 @@
 package main
 
 import (
-	"log"
-
 	queue "gitlab.goodsteam.tech/moklyakov/kafka-adapter"
+	"log"
 )
 
 func main() {
@@ -16,16 +15,14 @@ func example() {
 	consumerGroup := "malibu-api.ml-service.ml-moderation-images"
 	broker := []string{"automoderation-kafka-01.test.cloud.sber-msk-az1.goods.local:9092", "automoderation-kafka-02.test.cloud.sber-msk-az1.goods.local:9092", "automoderation-kafka-03.test.cloud.sber-msk-az1.goods.local:9092"}
 	messageToSend := []byte("some message")
-	defaultTopicConfig := queue.TopicConfig{NumPartitions: 1, ReplicationFactor: 1}
-	authSASLConfig := queue.AuthSASLConfig{User: "admin", Password: "Qmm3Dbrg6Kq6FPTYShgxKi2n"}
 	cfg := queue.KafkaCfg{
 		Concurrency:        100,
 		QueueToReadNames:   []string{topic},
 		QueueToWriteNames:  []string{topic},
 		Brokers:            broker,
 		ConsumerGroupID:    consumerGroup,
-		DefaultTopicConfig: defaultTopicConfig,
-		AuthSASLConfig:     authSASLConfig,
+		DefaultTopicConfig: queue.TopicConfig{NumPartitions: 1, ReplicationFactor: 1},
+		AuthSASLConfig:     queue.AuthSASLConfig{User: "admin", Password: "Qmm3Dbrg6Kq6FPTYShgxKi2n"},
 	}
 
 	log.Printf("starting adapter")
@@ -35,6 +32,13 @@ func example() {
 	}
 	defer q.Close()
 	log.Printf("adapter started")
+
+	log.Printf("ensure topic")
+	err = q.EnsureTopic(topic)
+	if err != nil {
+		log.Fatalf("cant ensure topic: %v", err)
+	}
+	log.Printf("topic ensured: %v", topic)
 
 	log.Printf("putting message")
 	err = q.Put(topic, messageToSend)

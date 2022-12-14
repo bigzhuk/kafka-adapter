@@ -200,16 +200,7 @@ func (q *Queue) init() error {
 		conn.Close()
 	}
 	//sarama
-	cfg := sarama.NewConfig()
-	cfg.Version = sarama.V2_3_0_0
-	if q.isSaslAuth() {
-		cfg.Net.SASL.User = q.cfg.AuthSASLConfig.User
-		cfg.Net.SASL.Password = q.cfg.AuthSASLConfig.Password
-		cfg.Net.SASL.Handshake = true
-		cfg.Net.SASL.Enable = true
-	}
-
-	srm, err := sarama.NewClient(q.cfg.Brokers, cfg)
+	srm, err := sarama.NewClient(q.cfg.Brokers, q.GetSaramaConfig())
 	if err != nil {
 		return fmt.Errorf("cant create sarama kafka client: %v", err)
 	}
@@ -588,9 +579,7 @@ func (q *Queue) EnsureTopic(topicName string) error {
 
 //Ensures that topic with given name was created
 func (q *Queue) EnsureTopicWithCtx(ctx context.Context, topicName string) error {
-	cfg := sarama.NewConfig()
-	cfg.Version = sarama.V2_3_0_0
-	a, err := sarama.NewClusterAdmin(q.cfg.Brokers, cfg)
+	a, err := sarama.NewClusterAdmin(q.cfg.Brokers, q.GetSaramaConfig())
 	if err != nil {
 		panic(err)
 	}
@@ -613,9 +602,7 @@ func (q *Queue) EnsureTopicWithCtx(ctx context.Context, topicName string) error 
 }
 
 func (q *Queue) SetTopicConfig(topic string, entries map[string]*string) error {
-	cfg := sarama.NewConfig()
-	cfg.Version = sarama.V2_3_0_0
-	a, err := sarama.NewClusterAdmin(q.cfg.Brokers, cfg)
+	a, err := sarama.NewClusterAdmin(q.cfg.Brokers, q.GetSaramaConfig())
 	if err != nil {
 		return err
 	}
@@ -659,8 +646,17 @@ func (q *Queue) GetConsumerLagForSinglePartition(ctx context.Context, topicName 
 	return newest - lag - 1, nil
 }
 
-func (q *Queue) Hello() {
-	fmt.Println("hi")
+func (q *Queue) GetSaramaConfig() *sarama.Config {
+	cfg := sarama.NewConfig()
+	cfg.Version = sarama.V2_3_0_0
+	if q.isSaslAuth() {
+		cfg.Net.SASL.User = q.cfg.AuthSASLConfig.User
+		cfg.Net.SASL.Password = q.cfg.AuthSASLConfig.Password
+		cfg.Net.SASL.Handshake = true
+		cfg.Net.SASL.Enable = true
+	}
+
+	return cfg
 }
 
 type Message struct {
