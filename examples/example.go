@@ -11,21 +11,21 @@ func main() {
 }
 
 func example() {
-	topic := "my_topic"
-	consumerGroup := "my_group"
-	broker := "kafka-01-croc.test.lan:9092"
+	//topic := "malibu-api.ml-service.ml-moderation-images"
+	topic := "ml-service.malibu-api-pim-import-result-consumer.ml-moderation-images-result"
+	consumerGroup := "malibu-api.ml-service.ml-moderation-images"
+	broker := []string{"automoderation-kafka-01.test.cloud.sber-msk-az1.goods.local:9092", "automoderation-kafka-02.test.cloud.sber-msk-az1.goods.local:9092", "automoderation-kafka-03.test.cloud.sber-msk-az1.goods.local:9092"}
 	messageToSend := []byte("some message")
-
+	defaultTopicConfig := queue.TopicConfig{NumPartitions: 1, ReplicationFactor: 1}
+	authSASLConfig := queue.AuthSASLConfig{User: "admin", Password: "Qmm3Dbrg6Kq6FPTYShgxKi2n"}
 	cfg := queue.KafkaCfg{
-		Concurrency:       100,
-		QueueToReadNames:  []string{topic},
-		QueueToWriteNames: []string{topic},
-		Brokers:           []string{broker},
-		ConsumerGroupID:   consumerGroup,
-		DefaultTopicConfig: struct {
-			NumPartitions     int
-			ReplicationFactor int
-		}{NumPartitions: 1, ReplicationFactor: 1},
+		Concurrency:        100,
+		QueueToReadNames:   []string{topic},
+		QueueToWriteNames:  []string{topic},
+		Brokers:            broker,
+		ConsumerGroupID:    consumerGroup,
+		DefaultTopicConfig: defaultTopicConfig,
+		AuthSASLConfig:     authSASLConfig,
 	}
 
 	log.Printf("starting adapter")

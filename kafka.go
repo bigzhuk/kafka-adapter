@@ -5,6 +5,7 @@ import (
 	"fmt"
 	sarama "github.com/Shopify/sarama"
 	kafka "github.com/segmentio/kafka-go"
+	"github.com/segmentio/kafka-go/sasl/plain"
 	"github.com/segmentio/kafka-go/snappy"
 	"strings"
 	"sync"
@@ -146,8 +147,13 @@ type KafkaCfg struct {
 
 	CompressionCodec   string
 	DefaultTopicConfig TopicConfig
-}
 
+	AuthSASLConfig AuthSASLConfig
+}
+type AuthSASLConfig struct {
+	User     string
+	Password string
+}
 type TopicConfig kafka.TopicConfig
 
 func (c TopicConfig) WithSetting(name, value string) {
@@ -196,6 +202,13 @@ func (q *Queue) init() error {
 	//sarama
 	cfg := sarama.NewConfig()
 	cfg.Version = sarama.V2_3_0_0
+	if q.isSaslAuth() {
+		cfg.Net.SASL.User = q.cfg.AuthSASLConfig.User
+		cfg.Net.SASL.Password = q.cfg.AuthSASLConfig.Password
+		cfg.Net.SASL.Handshake = true
+		cfg.Net.SASL.Enable = true
+	}
+
 	srm, err := sarama.NewClient(q.cfg.Brokers, cfg)
 	if err != nil {
 		return fmt.Errorf("cant create sarama kafka client: %v", err)
@@ -235,6 +248,18 @@ func (q *Queue) ReaderRegister(topic string) {
 			Topic:    topic,
 			MinBytes: 10e1,
 			MaxBytes: 10e5,
+		}
+		if q.isSaslAuth() {
+			mechanism := plain.Mechanism{
+				Username: q.cfg.AuthSASLConfig.User,
+				Password: q.cfg.AuthSASLConfig.Password,
+			}
+			dialer := &kafka.Dialer{
+				Timeout:       10 * time.Second,
+				DualStack:     true,
+				SASLMechanism: mechanism,
+			}
+			cfg.Dialer = dialer
 		}
 		if q.cfg.AsyncAck {
 			cfg.CommitInterval = time.Second
@@ -284,6 +309,16 @@ func (q *Queue) WriterRegister(topic string) {
 		Balancer:         &kafka.LeastBytes{},
 		CompressionCodec: codec,
 	})
+	if q.isSaslAuth() {
+		mechanism := plain.Mechanism{
+			Username: q.cfg.AuthSASLConfig.User,
+			Password: q.cfg.AuthSASLConfig.Password,
+		}
+		sharedTransport := &kafka.Transport{
+			SASL: mechanism,
+		}
+		w.Transport = sharedTransport
+	}
 	q.writers[topic] <- w
 }
 
@@ -330,6 +365,10 @@ func (q *Queue) produceMessages(rch chan *kafka.Reader, ch chan *Message) {
 			return
 		}
 	}
+}
+
+func (q *Queue) isSaslAuth() bool {
+	return q.cfg.AuthSASLConfig.User != "" && q.cfg.AuthSASLConfig.Password != ""
 }
 
 func (q *Queue) producerIteration(ctx context.Context, rch chan *kafka.Reader, ch chan *Message) bool {
