@@ -1,7 +1,7 @@
 package main
 
 import (
-	queue "gitlab.goodsteam.tech/moklyakov/kafka-adapter"
+	queue "github.com/bigzhuk/kafka-adapter"
 	"log"
 )
 
