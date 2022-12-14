@@ -22,7 +22,7 @@ func example() {
 		Brokers:            broker,
 		ConsumerGroupID:    consumerGroup,
 		DefaultTopicConfig: queue.TopicConfig{NumPartitions: 1, ReplicationFactor: 1},
-		AuthSASLConfig:     queue.AuthSASLConfig{User: "admin", Password: "Qmm3Dbrg6Kq6FPTYShgxKi2n"},
+		AuthSASLConfig:     queue.AuthSASLConfig{User: "", Password: ""}, // укажи логин/пароль чтобы заработало
 	}
 
 	log.Printf("starting adapter")
